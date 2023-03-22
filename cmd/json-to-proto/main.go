@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
+
+	"github.com/romanyx/jwalk"
 )
 
 func main() {
@@ -52,7 +54,26 @@ type Field struct {
 
 func parseJsonToMessages(input []byte) ([]Message, error) {
 	result := []Message{}
-	return result, nil
+
+	i, err := jwalk.Parse(input)
+	if err != nil {
+		return result, err
+	}
+	switch v := i.(type) {
+	case jwalk.ObjectWalker:
+		return addJSONObjectToMessages(v, result)
+	default:
+		return result, fmt.Errorf("first level should always be an object")
+	}
+}
+
+func addJSONObjectToMessages(v jwalk.ObjectWalker, result []Message) ([]Message, error) {
+	err := v.Walk(func(key string, value interface{}) error {
+		return nil
+	})
+	if err != nil {
+		return result, nil
+	}
 }
 
 func doMain(fname string) error {
